@@ -153,7 +153,12 @@ Vec3f IntersectionTestIntegrator::directLighting(
   //
   //    You can use iteraction.p to get the intersection position.
   //
-  UNIMPLEMENTED;
+  SurfaceInteraction occlued_intersection;
+  if (scene->intersect(test_ray, occlued_intersection)){
+    if (Normalize(occlued_intersection.p - interaction.p) == light_dir 
+      && Norm(occlued_intersection.p - interaction.p)< dist_to_light)
+      return Vec3f(0, 0, 0);
+  }
 
   // Not occluded, compute the contribution using perfect diffuse diffuse model
   // Perform a quick and dirty check to determine whether the BSDF is ideal
@@ -174,8 +179,7 @@ Vec3f IntersectionTestIntegrator::directLighting(
         std::max(Dot(light_dir, interaction.normal), 0.0f);  // one-sided
 
     // You should assign the value to color
-    // color = ...
-    UNIMPLEMENTED;
+    color = bsdf->evaluate(interaction) * cos_theta;
   }
 
   return color;

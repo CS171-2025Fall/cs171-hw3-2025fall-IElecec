@@ -143,8 +143,7 @@ typename BVHTree<_>::IndexType BVHTree<_>::build(
   // @see span_left: The left index of the current span
   // @see span_right: The right index of the current span
   //
-  if(span_right - span_left ==1)
-  {
+  if(span_right - span_left ==1 || depth >= CUTOFF_DEPTH){
     // create leaf node
     const auto &node = nodes[span_left];
     InternalNode result(span_left, span_right);

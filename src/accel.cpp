@@ -43,7 +43,39 @@ bool AABB::intersect(const Ray &ray, Float *t_in, Float *t_out) const {
   //    for getting the inverse direction of the ray.
   // @see Min/Max/ReduceMin/ReduceMax
   //    for vector min/max operations.
-  UNIMPLEMENTED;
+    Float tmin, tmax, tymin, tymax, tzmin, tzmax;
+    Vec3f invdir = ray.safe_inverse_direction;
+    Vec<bool, 3> sign(invdir.x>0, invdir.y>0, invdir.z>0);
+    
+    tmin = ((sign.x?low_bnd:upper_bnd).x - ray.origin.x) * invdir.x;
+    tmax = ((sign.x?upper_bnd:low_bnd).x - ray.origin.x) * invdir.x;
+    tymin = ((sign.y?low_bnd:upper_bnd).y - ray.origin.y) * invdir.y;
+    tymax = ((sign.y?upper_bnd:low_bnd).y - ray.origin.y) * invdir.y;
+    
+    
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+    if (tymin > tmin)
+        tmin = tymin;
+    if (tymax < tmax)
+        tmax = tymax;
+    
+    tzmin = ((sign.z?low_bnd:upper_bnd).z - ray.origin.z) * invdir.z;
+    tzmax = ((sign.z?upper_bnd:low_bnd).z - ray.origin.z) * invdir.z;
+    
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+
+    if (tzmin > tmin)
+        tmin = tzmin;
+    if (tzmax < tmax)
+        tmax = tzmax;
+    
+    *t_in = tmin;
+    *t_out = tmax;
+
+    return true;
 }
 
 /* ===================================================================== *
@@ -92,10 +124,27 @@ bool TriangleIntersect(Ray &ray, const uint32_t &triangle_index,
   // You can use @see Cross and @see Dot for determinant calculations.
 
   // Delete the following lines after you implement the function
-  InternalScalarType u = InternalScalarType(0);
-  InternalScalarType v = InternalScalarType(0);
-  InternalScalarType t = InternalScalarType(0);
-  UNIMPLEMENTED;
+  // InternalScalarType u = InternalScalarType(0);
+  // InternalScalarType v = InternalScalarType(0);
+  // InternalScalarType t = InternalScalarType(0);
+  // UNIMPLEMENTED;
+
+  InternalVecType a1 = v1 - v0;
+  InternalVecType a2 = v2 - v0;
+  InternalVecType a3 = InternalVecType(0,0,0) - ray.direction;
+  InternalVecType b = ray.origin - v0;
+  
+  InternalScalarType deno = Dot(a1, Cross(a2, a3));
+  if(deno == 0) 
+    return false;
+
+  InternalScalarType u = Dot(b, Cross(a2, a3))/ deno;
+  InternalScalarType v = Dot(a1, Cross(b, a3))/ deno;
+  InternalScalarType t = Dot(a1, Cross(a2, b))/ deno;
+
+  if(! ((u >= 0) && (v >= 0) && (u + v <= 1) && (ray.t_min <= t) && (t <= ray.t_max)))
+      return false;
+  
 
   // We will reach here if there is an intersection
 

@@ -180,7 +180,7 @@ Vec3f IntersectionTestIntegrator::directLighting(
         std::max(Dot(light_dir, interaction.normal), 0.0f);  // one-sided
 
     // You should assign the value to color
-    color = bsdf->evaluate(interaction) * cos_theta * point_light_flux;
+    color = bsdf->evaluate(interaction) * cos_theta * point_light_flux / (12.56f *dist_to_light * dist_to_light);
   }
 
   return color;
@@ -326,7 +326,7 @@ Vec3f AreaLightIntegrator::directLighting(
   Vec3f color(0, 0, 0);
   int light_num = scene->getLights().size();
   
-  const int sample_number = 10;
+  const int sample_number = 100;
   for (const ref<Light> &light : scene->getLights()){
     if(dynamic_cast<AreaLight*>(light.get()) == nullptr) continue;
     /*
@@ -408,7 +408,7 @@ Vec3f AreaLightIntegrator::directLighting(
             std::max(Dot(light_dir, interaction.normal), 0.0f);  // one-sided
 
         // You should assign the value to color
-        color += bsdf->evaluate(interaction) * cos_theta * point_light_flux / (sample_number*1.0f);
+        color += bsdf->evaluate(interaction) * cos_theta * point_light_flux / (12.56f *dist_to_light * dist_to_light) / (sample_number*1.0f);
         // color += bsdf->evaluate(interaction) * cos_theta / (sample_number*1.0f);
       }
     }

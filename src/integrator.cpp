@@ -180,7 +180,8 @@ Vec3f IntersectionTestIntegrator::directLighting(
         std::max(Dot(light_dir, interaction.normal), 0.0f);  // one-sided
 
     // You should assign the value to color
-    color = bsdf->evaluate(interaction) * cos_theta * point_light_flux / (12.56f *dist_to_light * dist_to_light);
+    Float pi = M_PI;
+    color = bsdf->evaluate(interaction) * cos_theta * point_light_flux / (pi * 4.0f  *dist_to_light * dist_to_light);
   }
 
   return color;
@@ -324,7 +325,6 @@ Vec3f AreaLightIntegrator::Li(
 Vec3f AreaLightIntegrator::directLighting(
     ref<Scene> scene, SurfaceInteraction &interaction) const {
   Vec3f color(0, 0, 0);
-  int light_num = scene->getLights().size();
   
   const int sample_number = 100;
   for (const ref<Light> &light : scene->getLights()){
@@ -408,9 +408,133 @@ Vec3f AreaLightIntegrator::directLighting(
             std::max(Dot(light_dir, interaction.normal), 0.0f);  // one-sided
 
         // You should assign the value to color
-        color += bsdf->evaluate(interaction) * cos_theta * point_light_flux / (12.56f *dist_to_light * dist_to_light) / (sample_number*1.0f);
+        Float pi = M_PI;
+        color += bsdf->evaluate(interaction) * cos_theta * point_light_flux / (pi * 4.0f *dist_to_light * dist_to_light) / (sample_number*1.0f);
         // color += bsdf->evaluate(interaction) * cos_theta / (sample_number*1.0f);
       }
+    }
+  }
+  return color;
+}
+
+/* ===================================================================== *
+ *
+ * Env Light Integrator's Implementation
+ *
+ * ===================================================================== */
+
+void EnvLightIntegrator::render(ref<Camera> camera, ref<Scene> scene) {
+  std::atomic<int> cnt = 0;
+
+  const Vec2i &resolution = camera->getFilm()->getResolution();
+#pragma omp parallel for schedule(dynamic)
+  for (int dx = 0; dx < resolution.x; dx++) {
+    ++cnt;
+    if (cnt % (resolution.x / 10) == 0)
+      Info_("Rendering: {:.02f}%", cnt * 100.0 / resolution.x);
+    Sampler sampler;
+    for (int dy = 0; dy < resolution.y; dy++) {
+      sampler.setPixelIndex2D(Vec2i(dx, dy));
+      for (int sample = 0; sample < spp; sample++) {
+
+        const Vec2f &pixel_sample = sampler.getPixelSample();
+        auto ray = camera->generateDifferentialRay(pixel_sample.x, pixel_sample.y);
+        assert(pixel_sample.x >= dx && pixel_sample.x <= dx + 1);
+        assert(pixel_sample.y >= dy && pixel_sample.y <= dy + 1);
+        const Vec3f &L = Li(scene, ray, sampler);
+        camera->getFilm()->commitSample(pixel_sample, L);
+      }
+    }
+  }
+}
+
+Vec3f EnvLightIntegrator::Li(
+    ref<Scene> scene, DifferentialRay &ray, Sampler &sampler) const {
+  Vec3f color(0.0);
+
+  // Cast a ray until we hit a non-specular surface or miss
+  // Record whether we have found a diffuse surface
+  bool diffuse_found = false;
+  SurfaceInteraction interaction;
+
+  for (int i = 0; i < max_depth; ++i) {
+    interaction      = SurfaceInteraction();
+    bool intersected = scene->intersect(ray, interaction);
+
+    // Perform RTTI to determine the type of the surface
+    bool is_ideal_diffuse =
+        dynamic_cast<const IdealDiffusion *>(interaction.bsdf) != nullptr;
+    bool is_perfect_refraction =
+        dynamic_cast<const PerfectRefraction *>(interaction.bsdf) != nullptr;
+
+    // Set the outgoing direction
+    interaction.wo = -ray.direction;
+
+    if (!intersected) {
+      break;
+    }
+
+    if (is_perfect_refraction) {
+      float pdf;
+      interaction.bsdf->sample(interaction, sampler, &pdf);
+      ray = interaction.spawnRay(interaction.wi);
+      continue;
+    }
+
+    if (is_ideal_diffuse) {
+      // We only consider diffuse surfaces for direct lighting
+      diffuse_found = true;
+      break;
+    }
+
+    // We simply omit any other types of surfaces
+    break;
+  }
+
+  if (!diffuse_found) {
+    return color;
+  }
+
+  color = directLighting(scene, interaction);
+  return color;
+}
+
+Vec3f EnvLightIntegrator::directLighting(
+    ref<Scene> scene, SurfaceInteraction &interaction) const {
+  Vec3f color(0, 0, 0);
+  
+  const int sample_number = 100;
+
+  Sampler sampler;
+  const ref<InfiniteAreaLight> light = scene->getInfiniteLight();
+  for(int i = 0;i < sample_number;i++){
+    SurfaceInteraction temp_interaction = interaction;
+    SurfaceInteraction light_interation = light->sample(temp_interaction,sampler);
+
+    Vec3f wi = temp_interaction.wi;
+
+    Vec3f radiance = light->Le(light_interation, wi);
+
+    auto test_ray = interaction.spawnRay(wi);
+    SurfaceInteraction occluded_intersection;
+    if (scene->intersect(test_ray, occluded_intersection)){
+        continue;
+    }
+
+    // Not occluded, compute the contribution using perfect diffuse diffuse model
+    // Perform a quick and dirty check to determine whether the BSDF is ideal
+    // diffuse by RTTI
+    const BSDF *bsdf      = interaction.bsdf;
+    bool is_ideal_diffuse = dynamic_cast<const IdealDiffusion *>(bsdf) != nullptr;
+
+    if (bsdf != nullptr && is_ideal_diffuse) {
+
+      Float cos_theta =
+          std::max(Dot(wi, interaction.normal), 0.0f);  // one-sided
+
+      // You should assign the value to color
+      color += bsdf->evaluate(interaction) * cos_theta * radiance / light_interation.pdf / (sample_number*1.0f);
+      // color += bsdf->evaluate(interaction) * cos_theta / (sample_number*1.0f);
     }
   }
   return color;

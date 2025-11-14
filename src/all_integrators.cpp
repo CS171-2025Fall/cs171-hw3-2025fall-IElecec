@@ -13,6 +13,9 @@ RDR_REGISTER_FACTORY(Integrator, [](const Properties &props) -> Integrator * {
   if (type == "area_light") {
     return Memory::alloc<AreaLightIntegrator>(props);
   }
+  if (type == "env_light") {
+    return Memory::alloc<EnvLightIntegrator>(props);
+  }
   
   Exception_("Integrator type {} not found", type);
 

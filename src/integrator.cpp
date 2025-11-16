@@ -326,7 +326,7 @@ Vec3f AreaLightIntegrator::directLighting(
     ref<Scene> scene, SurfaceInteraction &interaction) const {
   Vec3f color(0, 0, 0);
   
-  const int sample_number = 100;
+  const int sample_number = 1000;
   for (const ref<Light> &light : scene->getLights()){
     if(dynamic_cast<AreaLight*>(light.get()) == nullptr) continue;
     /*
@@ -502,7 +502,7 @@ Vec3f EnvLightIntegrator::directLighting(
     ref<Scene> scene, SurfaceInteraction &interaction) const {
   Vec3f color(0, 0, 0);
   
-  const int sample_number = 100;
+  const int sample_number = 1000;
 
   Sampler sampler;
   const ref<InfiniteAreaLight> light = scene->getInfiniteLight();

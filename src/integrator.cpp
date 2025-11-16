@@ -277,10 +277,10 @@ Vec3f AreaLightIntegrator::Li(
     interaction      = SurfaceInteraction();
     bool intersected = scene->intersect(ray, interaction);
 
-    bool is_area_light = 
-    interaction.primitive->getAreaLight() != nullptr;
+    bool is_area_light = interaction.primitive->hasAreaLight();
     if(is_area_light){
-      color = interaction.primitive->getAreaLight()->Le(interaction,interaction.wo);
+      Vec3f radience = interaction.primitive->getAreaLight()->Le(interaction,interaction.wo);
+      color = radience / max(max(radience.x, radience.y), radience.z);
       return color;
     }
 
@@ -408,8 +408,7 @@ Vec3f AreaLightIntegrator::directLighting(
             std::max(Dot(light_dir, interaction.normal), 0.0f);  // one-sided
 
         // You should assign the value to color
-        Float pi = M_PI;
-        color += bsdf->evaluate(interaction) * cos_theta * point_light_flux / (pi * 4.0f *dist_to_light * dist_to_light) / (sample_number*1.0f);
+        color += bsdf->evaluate(interaction) * cos_theta * point_light_flux / light_interation.pdf / (sample_number*1.0f);
         // color += bsdf->evaluate(interaction) * cos_theta / (sample_number*1.0f);
       }
     }

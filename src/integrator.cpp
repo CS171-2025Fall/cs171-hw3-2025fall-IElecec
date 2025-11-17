@@ -318,15 +318,15 @@ Vec3f AreaLightIntegrator::Li(
     return color;
   }
 
-  color = directLighting(scene, interaction);
+  color = directLighting(scene, interaction, sampler);
   return color;
 }
 
 Vec3f AreaLightIntegrator::directLighting(
-    ref<Scene> scene, SurfaceInteraction &interaction) const {
+    ref<Scene> scene, SurfaceInteraction &interaction, Sampler &sampler) const {
   Vec3f color(0, 0, 0);
   
-  const int sample_number = 1000;
+  const int sample_number = 100;
   for (const ref<Light> &light : scene->getLights()){
     if(dynamic_cast<AreaLight*>(light.get()) == nullptr) continue;
     /*
@@ -373,7 +373,6 @@ Vec3f AreaLightIntegrator::directLighting(
         color += local_color;
     }
     */
-    Sampler sampler;
     for(int i = 0;i < sample_number;i++){
       SurfaceInteraction light_interation = light->sample(sampler);
       Vec3f point_light_position = light_interation.p; 
@@ -470,6 +469,7 @@ Vec3f EnvLightIntegrator::Li(
     interaction.wo = -ray.direction;
 
     if (!intersected) {
+      color = scene->getInfiniteLight()->Le(interaction, ray.direction);
       break;
     }
 
@@ -494,27 +494,24 @@ Vec3f EnvLightIntegrator::Li(
     return color;
   }
 
-  color = directLighting(scene, interaction);
+  color = directLighting(scene, interaction, sampler);
   return color;
 }
 
 Vec3f EnvLightIntegrator::directLighting(
-    ref<Scene> scene, SurfaceInteraction &interaction) const {
+    ref<Scene> scene, SurfaceInteraction &interaction, Sampler &sampler) const {
   Vec3f color(0, 0, 0);
-  
-  const int sample_number = 1000;
+  const int sample_number = 500;
 
-  Sampler sampler;
   const ref<InfiniteAreaLight> light = scene->getInfiniteLight();
   for(int i = 0;i < sample_number;i++){
     SurfaceInteraction temp_interaction = interaction;
     SurfaceInteraction light_interation = light->sample(temp_interaction,sampler);
 
     Vec3f wi = temp_interaction.wi;
+    Vec3f radiance = light->Le(light_interation, -wi);
 
-    Vec3f radiance = light->Le(light_interation, wi);
-
-    auto test_ray = interaction.spawnRay(wi);
+    auto test_ray = temp_interaction.spawnRay(wi);
     SurfaceInteraction occluded_intersection;
     if (scene->intersect(test_ray, occluded_intersection)){
         continue;
@@ -523,16 +520,18 @@ Vec3f EnvLightIntegrator::directLighting(
     // Not occluded, compute the contribution using perfect diffuse diffuse model
     // Perform a quick and dirty check to determine whether the BSDF is ideal
     // diffuse by RTTI
-    const BSDF *bsdf      = interaction.bsdf;
+    const BSDF *bsdf      = temp_interaction.bsdf;
     bool is_ideal_diffuse = dynamic_cast<const IdealDiffusion *>(bsdf) != nullptr;
 
     if (bsdf != nullptr && is_ideal_diffuse) {
 
       Float cos_theta =
-          std::max(Dot(wi, interaction.normal), 0.0f);  // one-sided
-
+          std::max(Dot(wi, temp_interaction.normal), 0.0f);  // one-sided
+      
       // You should assign the value to color
-      color += bsdf->evaluate(interaction) * cos_theta * radiance / light_interation.pdf / (sample_number*1.0f);
+      // std::cout<< bsdf->evaluate(temp_interaction)*cos_theta*radiance<<std::endl;
+      // std::cout<< light_interation.pdf<<std::endl;
+      color += bsdf->evaluate(temp_interaction) * cos_theta * radiance / (2.0f * light_interation.pdf) / (sample_number*1.0f);
       // color += bsdf->evaluate(interaction) * cos_theta / (sample_number*1.0f);
     }
   }

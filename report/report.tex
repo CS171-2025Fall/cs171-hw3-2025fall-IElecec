@@ -98,7 +98,36 @@ To judge whether a ray intersects with a AABB, I should compute the intersection
 	If the test ray is not occluded, then I can compute the contribution of the interaction, this assignment only required us to accomplish a simple phong-shading-like model and use the approximation of albedo. I set the color as the product of the albedo and the given flux of the point light divided by 4$\pi$ multipling the square of the distance between the 2 points.  
 \subsection{Implement anti-aliasing via multi-ray sampling per pixel within a sub-pixel aperture. }
 	To achieve the requirement, I use the given sampler to get pixel sample and create the diffrential ray based on the coordinate of the pixel sample.
+\subsection{Implement rectangular area lights with soft shadow generation.}
+	For each area light, I sample N points and treat every point as a point light, which can result in soft shadow generation, and color contributions are set to be the product of the albedo and the given flux of the point light divided by light pdf and sample number.\\
+	What's more, for the area light object itself, when the ray of camera intersects with it, the color will be set to the radiance of the area light divided by the maximum of its 3 dimensions.
+\subsection{Implement environment lighting via environment maps. }
+	When implement environment, I need to sample at the direct lighting part, but the thing I sample isn't a position, but the directions because the environment map isn't a object and its depth is infinity. For environment light, I also need to generate a test ray whose origin is the position of interaction and direction is the negative direction of sample direction, if the test ray intersects with some primitives, then the environment light is occluded and has no contribution.\\
+	What's more, if the camera light doesn't intersect with anything, its color will be set as the color of the material of environment map.
 \section{Results}
-
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.5]{images/cbox_no_light_refract.png}
+	\caption{\text{cbox\_no\_light\_refraction.json\:} no light, perfect refract, spp = 32, 512*512}
+	\label{figure}
+	\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.5]{images/cbox_no_light.png}
+	\caption{\text{cbox\_no\_light.json\:} no light, spp = 32, 512*512}
+	\label{figure}
+	\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=1.0]{images/cbox_area_light.png}
+	\caption{\text{cbox\_area\_light.json\:} rectangule area light, spp = 128, 256*256}
+	\label{figure}
+	\end{figure}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.5]{images/cbox_env_light.png}
+	\caption{\text{cbox\_env\_light.json\:} environment light (white background), spp = 128, 512*512}
+	\label{figure}
+	\end{figure}
 \end{document}
 

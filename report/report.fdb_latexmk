@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1763296953.48721 "/home/ielecec/Desktop/CS171/cs171-hw3-2025fall-IElecec/report/report.tex" "report.pdf" "report" 1763296954.20746 0
-  "/home/ielecec/Desktop/CS171/cs171-hw3-2025fall-IElecec/report/report.tex" 1763296953.31284 5654 fc0eb055efc32f3fca3450a0f5f0d5e7 ""
+["pdflatex"] 1763367046.49009 "/home/ielecec/Desktop/CS171/cs171-hw3-2025fall-IElecec/report/report.tex" "report.pdf" "report" 1763367047.38915 0
+  "/home/ielecec/Desktop/CS171/cs171-hw3-2025fall-IElecec/report/report.tex" 1763367045.40106 7710 51cad5e311cc40140c38c75ba13b99f3 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-4.enc" 1558214095 7693 0f2dce6d313c82989ec3a67fc24df2a0 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc" 1490131464 2921 8ca0eb0831f9bc5da080d3697cfe67bf ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc" 1490131464 2933 9ad527ce78d7c5fa0a642dead095f172 ""
@@ -198,9 +198,13 @@
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1759505176 3345752 983019a9ec09842da2dfb1f92e69a92f ""
   "/usr/local/texlive/2025/texmf.cnf" 1759505062.4144 455 5b996dcaa0eb4ef14a83b026bc0a008c ""
   "acmart.cls" 1762776838.97167 71884 b04e6b3b14d88dc94338cba25cf7bb40 ""
-  "report.aux" 1763296954.14122 1795 5f877545c1d68ebffe43d7512e062a37 "pdflatex"
-  "report.out" 1763296954.14192 3378 00372adb0d630e762384c62851b75b72 "pdflatex"
-  "report.tex" 1763296953.31284 5654 fc0eb055efc32f3fca3450a0f5f0d5e7 ""
+  "images/cbox_area_light.png" 1763365065.53615 49903 fcf085cef47c5776acaa00e8ca9a03bd ""
+  "images/cbox_env_light.png" 1763365076.47138 60798 eb20e0b04d7e426553b37fb9a936d4ed ""
+  "images/cbox_no_light.png" 1763364929.25934 107848 51b473588c191cd8b97b0c5f5e70ce40 ""
+  "images/cbox_no_light_refract.png" 1763364639.31705 112236 92ba07036e11ea0ea059aa20c0da12f5 ""
+  "report.aux" 1763367047.31748 3706 eae2771b9c283b7f9f6eaebd25321e27 "pdflatex"
+  "report.out" 1763367047.31748 4154 a0e0644b52df5996ec3cead00dd4f01c "pdflatex"
+  "report.tex" 1763367045.40106 7710 51cad5e311cc40140c38c75ba13b99f3 ""
   (generated)
   "report.aux"
   "report.log"
